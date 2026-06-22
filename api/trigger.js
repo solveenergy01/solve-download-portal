@@ -12,15 +12,16 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing job_id' });
   }
 
-  // Fire Make.com webhook (non-blocking — we don't wait for Make to finish)
+  const WEBHOOK_URL = process.env.MAKE_WEBHOOK_URL || 'https://hook.us1.make.com/d22eeastlys8leoy8l0w5acta38ry2qr';
+
   try {
-    fetch(process.env.MAKE_WEBHOOK_URL, {
+    const response = await fetch(WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ job_id }),
     });
+    console.log('Make webhook response:', response.status);
   } catch (e) {
-    // Log but don't fail — page will still show polling UI
     console.error('Failed to trigger Make webhook:', e);
   }
 
