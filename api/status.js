@@ -24,13 +24,16 @@ export default function handler(req, res) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { status, download_url, job_name, error_message } = req.body;
+    const { status, step, download_url, job_name, error_message } = req.body;
+    const existing = jobs[job_id] || {};
 
     jobs[job_id] = {
-      status,           // 'processing' | 'ready' | 'error'
-      download_url,     // Google Drive direct download URL
-      job_name,         // e.g. "Job Card: Wayne Smith"
-      error_message,
+      ...existing,
+      status: status ?? existing.status,
+      step: step ?? existing.step,               // 1–5: current Make.com progress step
+      download_url: download_url ?? existing.download_url,
+      job_name: job_name ?? existing.job_name,
+      error_message: error_message ?? existing.error_message,
       updated_at: new Date().toISOString(),
     };
 
