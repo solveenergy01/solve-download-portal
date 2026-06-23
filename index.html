@@ -47,68 +47,74 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
       margin-bottom: 36px;
     }
 
-    .logo-icon {
-      width: 36px;
-      height: 36px;
-      background: var(--orange);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
+    .logo-img {
+      display: block;
+      width: 100%;
+      max-width: 220px;
+      height: auto;
     }
 
-    .logo-text {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--text);
-      letter-spacing: -0.01em;
-    }
-
-    .spinner-wrap {
+    .status-visual {
       margin: 0 auto 28px;
       width: 72px;
       height: 72px;
       position: relative;
     }
 
-    .spinner {
-      width: 72px;
-      height: 72px;
-      border-radius: 50%;
-      border: 3px solid var(--border);
-      border-top-color: var(--orange);
-      animation: spin 0.9s linear infinite;
-    }
-
-    .spinner-icon {
+    .status-loader,
+    .status-complete {
       position: absolute;
       inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 26px;
+      transition: opacity 0.35s ease, transform 0.35s ease;
     }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .success-icon {
+    .status-loader img,
+    .status-complete img {
       width: 72px;
       height: 72px;
-      background: rgba(34,197,94,0.1);
-      border: 2px solid var(--success);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 30px;
-      margin: 0 auto 28px;
+      object-fit: contain;
+    }
+
+    .status-loader {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .status-complete {
+      opacity: 0;
+      transform: scale(0.92);
+      pointer-events: none;
+    }
+
+    .is-ready .status-loader {
+      opacity: 0;
+      transform: scale(0.92);
+      pointer-events: none;
+    }
+
+    .is-ready .status-complete {
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: auto;
+    }
+
+    .hidden-block {
+      display: none;
+    }
+
+    .fade-out {
+      opacity: 0;
+      max-height: 0;
+      overflow: hidden;
+      margin: 0 !important;
+      padding: 0 !important;
+      transition: opacity 0.3s ease, max-height 0.35s ease;
     }
 
     .error-icon {
@@ -225,47 +231,66 @@
       margin-top: 20px;
     }
 
-    #state-processing, #state-ready, #state-error { display: none; }
-    #state-processing.active, #state-ready.active, #state-error.active { display: block; }
+    .download-fallback {
+      margin-top: 16px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .download-link {
+      color: var(--orange);
+      font-weight: 500;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      cursor: pointer;
+    }
+
+    .download-link:hover {
+      opacity: 0.88;
+    }
+
+    #state-main, #state-error { display: none; }
+    #state-main.active, #state-error.active { display: block; }
   </style>
 </head>
 <body>
 
 <div class="card">
   <div class="logo">
-    <div class="logo-icon">☀️</div>
-    <span class="logo-text">Solve Energy</span>
+    <img src="assets/solve-logo.png" alt="Solve" class="logo-img" />
   </div>
 
-  <!-- PROCESSING STATE -->
-  <div id="state-processing">
-    <div class="spinner-wrap">
-      <div class="spinner"></div>
-      <div class="spinner-icon">📂</div>
+  <!-- MAIN STATE (processing → ready on same page) -->
+  <div id="state-main">
+    <div class="status-visual">
+      <div class="status-loader" id="status-loader">
+        <img src="assets/loader-icon.png" alt="Preparing download" />
+      </div>
+      <div class="status-complete" id="status-complete">
+        <img src="assets/complete-icon.png" alt="Download ready" />
+      </div>
     </div>
-    <h1>Preparing your download</h1>
-    <div class="job-name" id="job-name-processing"></div>
-    <div class="steps">
-      <div class="step" id="step-1"><div class="step-dot"></div> Fetching job card details</div>
-      <div class="step" id="step-2"><div class="step-dot"></div> Generating job card PDF</div>
-      <div class="step" id="step-3"><div class="step-dot"></div> Exporting method statement</div>
-      <div class="step" id="step-4"><div class="step-dot"></div> Collecting site survey photos</div>
-      <div class="step" id="step-5"><div class="step-dot"></div> Packaging files</div>
-    </div>
-    <p>This usually takes 30–60 seconds.<br/>Your download will start automatically.</p>
-    <div class="timer" id="timer">Elapsed: 0s</div>
-  </div>
 
-  <!-- READY STATE -->
-  <div id="state-ready">
-    <div class="success-icon">✅</div>
-    <h1>Your download is ready</h1>
-    <div class="job-name" id="job-name-ready"></div>
-    <p>Your Job Card PDF has been prepared and is ready to download.</p>
-    <button id="download-btn" class="btn">
-      ⬇️ Download PDF
-    </button>
-    <p style="margin-top: 16px; font-size: 12px;">If the download doesn't start automatically, click the button above.</p>
+    <h1 id="status-title">Preparing Your Download</h1>
+    <div class="job-name" id="job-name"></div>
+
+    <div id="processing-content">
+      <div class="steps">
+        <div class="step" id="step-1"><div class="step-dot"></div> Fetching job card details</div>
+        <div class="step" id="step-2"><div class="step-dot"></div> Generating job card PDF</div>
+        <div class="step" id="step-3"><div class="step-dot"></div> Exporting method statement</div>
+        <div class="step" id="step-4"><div class="step-dot"></div> Collecting site survey photos</div>
+        <div class="step" id="step-5"><div class="step-dot"></div> Packaging files</div>
+      </div>
+      <p id="status-message">This usually takes 30–60 seconds.<br/>Your download will start automatically.</p>
+      <div class="timer" id="timer">Elapsed: 0s</div>
+    </div>
+
+    <div id="ready-content" class="hidden-block">
+      <p>Your Job Card PDF has been prepared and is ready to download.</p>
+      <p class="download-fallback">If the download doesn't start automatically, <a href="#" id="download-link" class="download-link">click here</a>.</p>
+    </div>
   </div>
 
   <!-- ERROR STATE -->
@@ -304,10 +329,44 @@
   }
 
   function showState(name) {
-    ['processing', 'ready', 'error'].forEach(s => {
-      document.getElementById(`state-${s}`).classList.remove('active');
-    });
-    document.getElementById(`state-${name}`).classList.add('active');
+    if (name === 'main') {
+      document.getElementById('state-main').classList.add('active');
+      document.getElementById('state-error').classList.remove('active');
+      return;
+    }
+
+    if (name === 'error') {
+      document.getElementById('state-main').classList.remove('active');
+      document.getElementById('state-error').classList.add('active');
+    }
+  }
+
+  function markAllStepsDone() {
+    for (let i = 1; i <= 5; i++) {
+      const el = document.getElementById(`step-${i}`);
+      el.classList.remove('active');
+      el.classList.add('done');
+    }
+  }
+
+  function transitionToReady(jobName) {
+    const main = document.getElementById('state-main');
+    main.classList.add('is-ready');
+    document.getElementById('status-title').textContent = 'Your Download Is Ready';
+
+    if (jobName) {
+      document.getElementById('job-name').textContent = jobName;
+    }
+
+    markAllStepsDone();
+
+    const processingContent = document.getElementById('processing-content');
+    processingContent.classList.add('fade-out');
+
+    setTimeout(() => {
+      processingContent.classList.add('hidden-block');
+      document.getElementById('ready-content').classList.remove('hidden-block');
+    }, 320);
   }
 
   function stopPolling() {
@@ -391,23 +450,34 @@
     }
   }
 
-  function handleReady(url, jobName) {
+  function handleReady(url, jobName, options = {}) {
     if (downloadHandled) return;
     downloadHandled = true;
     stopPolling();
+    showState('main');
 
     downloadUrl = url;
     downloadFilename = jobName ? `${jobName}.pdf` : 'JobCard.pdf';
 
     if (jobName) {
-      document.getElementById('job-name-ready').textContent = jobName;
+      document.getElementById('job-name').textContent = jobName;
     }
 
-    document.getElementById('download-btn').onclick = () => {
+    document.getElementById('download-link').onclick = (e) => {
+      e.preventDefault();
       forceDownload(downloadUrl, downloadFilename);
     };
 
-    showState('ready');
+    if (options.instant) {
+      document.getElementById('state-main').classList.add('is-ready');
+      document.getElementById('status-title').textContent = 'Your Download Is Ready';
+      document.getElementById('processing-content').classList.add('hidden-block');
+      document.getElementById('ready-content').classList.remove('hidden-block');
+      markAllStepsDone();
+    } else {
+      transitionToReady(jobName);
+    }
+
     forceDownload(downloadUrl, downloadFilename);
   }
 
@@ -443,12 +513,13 @@
     if (downloadUrlParam && (statusParam === 'ready' || !statusParam)) {
       handleReady(
         decodeParam(downloadUrlParam),
-        decodeParam(params.get('job_name'))
+        decodeParam(params.get('job_name')),
+        { instant: true }
       );
       return;
     }
 
-    showState('processing');
+    showState('main');
     startTimer();
     startStepAnimation();
     await triggerMake();
@@ -457,7 +528,8 @@
     poll();
 
     timeoutId = setTimeout(() => {
-      if (document.getElementById('state-processing').classList.contains('active')) {
+      const main = document.getElementById('state-main');
+      if (main.classList.contains('active') && !main.classList.contains('is-ready')) {
         stopPolling();
         document.getElementById('error-message').textContent = 'Download timed out. Please try again or contact your admin.';
         showState('error');
