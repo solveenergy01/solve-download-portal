@@ -285,16 +285,33 @@
   let elapsed = 0;
   let pollInterval;
   let timerInterval;
+  let timeoutId;
   let downloadUrl = null;
   let downloadFilename = 'JobCard.pdf';
 
   const stepTiming = [0, 5000, 12000, 20000, 35000];
+  const POLL_TIMEOUT_MS = 120000;
+
+  function decodeParam(value) {
+    if (!value) return null;
+    try {
+      return decodeURIComponent(value);
+    } catch {
+      return value;
+    }
+  }
 
   function showState(name) {
     ['processing', 'ready', 'error'].forEach(s => {
       document.getElementById(`state-${s}`).classList.remove('active');
     });
     document.getElementById(`state-${name}`).classList.add('active');
+  }
+
+  function stopPolling() {
+    clearInterval(pollInterval);
+    clearInterval(timerInterval);
+    clearTimeout(timeoutId);
   }
 
   function advanceStep(n) {
@@ -331,22 +348,59 @@
     }
   }
 
+  function triggerDownload(url, filename) {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename || 'JobCard.pdf';
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
   async function forceDownload(url, filename) {
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(blobUrl);
-    } catch(e) {
-      console.warn('Download failed, opening in new tab:', e);
-      window.open(url, '_blank');
+    const isSameOrigin = url.startsWith(BASE) || url.startsWith('/');
+
+    if (isSameOrigin) {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(blobUrl);
+        return;
+      } catch (e) {
+        console.warn('Blob download failed, using direct link:', e);
+      }
     }
+
+    triggerDownload(url, filename);
+  }
+
+  function handleReady(url, jobName) {
+    stopPolling();
+
+    downloadUrl = url;
+    downloadFilename = jobName ? `${jobName}.pdf` : 'JobCard.pdf';
+
+    if (jobName) {
+      document.getElementById('job-name-ready').textContent = jobName;
+    }
+
+    document.getElementById('download-btn').onclick = () => {
+      forceDownload(downloadUrl, downloadFilename);
+    };
+
+    showState('ready');
+    forceDownload(downloadUrl, downloadFilename);
   }
 
   async function poll() {
@@ -355,29 +409,9 @@
       const data = await res.json();
 
       if (data.status === 'ready' && data.download_url) {
-        clearInterval(pollInterval);
-        clearInterval(timerInterval);
-
-        downloadUrl = data.download_url;
-        downloadFilename = data.job_name ? `${data.job_name}.pdf` : 'JobCard.pdf';
-
-        if (data.job_name) {
-          document.getElementById('job-name-ready').textContent = data.job_name;
-        }
-
-        // Wire up manual download button
-        document.getElementById('download-btn').onclick = () => {
-          forceDownload(downloadUrl, downloadFilename);
-        };
-
-        showState('ready');
-
-        // Auto trigger download
-        setTimeout(() => forceDownload(downloadUrl, downloadFilename), 800);
-
+        handleReady(data.download_url, data.job_name || null);
       } else if (data.status === 'error') {
-        clearInterval(pollInterval);
-        clearInterval(timerInterval);
+        stopPolling();
         if (data.error_message) {
           document.getElementById('error-message').textContent = data.error_message;
         }
@@ -395,6 +429,17 @@
       return;
     }
 
+    const downloadUrlParam = params.get('download_url') || params.get('pdf_url');
+    const statusParam = params.get('status');
+
+    if (downloadUrlParam && (statusParam === 'ready' || !statusParam)) {
+      handleReady(
+        decodeParam(downloadUrlParam),
+        decodeParam(params.get('job_name'))
+      );
+      return;
+    }
+
     showState('processing');
     startTimer();
     startStepAnimation();
@@ -402,6 +447,14 @@
 
     pollInterval = setInterval(poll, 4000);
     poll();
+
+    timeoutId = setTimeout(() => {
+      if (document.getElementById('state-processing').classList.contains('active')) {
+        stopPolling();
+        document.getElementById('error-message').textContent = 'Download timed out. Please try again or contact your admin.';
+        showState('error');
+      }
+    }, POLL_TIMEOUT_MS);
   }
 
   init();
