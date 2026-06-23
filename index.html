@@ -288,9 +288,11 @@
   let timeoutId;
   let downloadUrl = null;
   let downloadFilename = 'JobCard.pdf';
+  let downloadHandled = false;
 
   const stepTiming = [0, 5000, 12000, 20000, 35000];
   const POLL_TIMEOUT_MS = 120000;
+  const POLL_INTERVAL_MS = 2000;
 
   function decodeParam(value) {
     if (!value) return null;
@@ -360,32 +362,38 @@
     document.body.removeChild(a);
   }
 
+  function getProxyDownloadUrl(url, filename) {
+    const proxy = new URL(`${BASE}/api/download`);
+    proxy.searchParams.set('url', url);
+    proxy.searchParams.set('filename', filename);
+    return proxy.toString();
+  }
+
   async function forceDownload(url, filename) {
     const isSameOrigin = url.startsWith(BASE) || url.startsWith('/');
+    const downloadTarget = isSameOrigin ? url : getProxyDownloadUrl(url, filename);
 
-    if (isSameOrigin) {
-      try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const blob = await response.blob();
-        const blobUrl = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = blobUrl;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(blobUrl);
-        return;
-      } catch (e) {
-        console.warn('Blob download failed, using direct link:', e);
-      }
+    try {
+      const response = await fetch(downloadTarget);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (e) {
+      console.warn('Download failed, using direct link:', e);
+      triggerDownload(url, filename);
     }
-
-    triggerDownload(url, filename);
   }
 
   function handleReady(url, jobName) {
+    if (downloadHandled) return;
+    downloadHandled = true;
     stopPolling();
 
     downloadUrl = url;
@@ -445,7 +453,7 @@
     startStepAnimation();
     await triggerMake();
 
-    pollInterval = setInterval(poll, 4000);
+    pollInterval = setInterval(poll, POLL_INTERVAL_MS);
     poll();
 
     timeoutId = setTimeout(() => {
