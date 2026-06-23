@@ -69,7 +69,6 @@
       letter-spacing: -0.01em;
     }
 
-    /* Spinner */
     .spinner-wrap {
       margin: 0 auto 28px;
       width: 72px;
@@ -99,7 +98,6 @@
       to { transform: rotate(360deg); }
     }
 
-    /* Success icon */
     .success-icon {
       width: 72px;
       height: 72px;
@@ -113,7 +111,6 @@
       margin: 0 auto 28px;
     }
 
-    /* Error icon */
     .error-icon {
       width: 72px;
       height: 72px;
@@ -190,14 +187,8 @@
       transition: background 0.3s;
     }
 
-    .step.active .step-dot {
-      background: var(--orange);
-      box-shadow: 0 0 8px var(--orange);
-    }
-
-    .step.done .step-dot {
-      background: var(--success);
-    }
+    .step.active .step-dot { background: var(--orange); box-shadow: 0 0 8px var(--orange); }
+    .step.done .step-dot { background: var(--success); }
 
     .btn {
       display: inline-flex;
@@ -234,9 +225,6 @@
       margin-top: 20px;
     }
 
-    .hidden { display: none; }
-
-    /* State panels */
     #state-processing, #state-ready, #state-error { display: none; }
     #state-processing.active, #state-ready.active, #state-error.active { display: block; }
   </style>
@@ -262,143 +250,8 @@
       <div class="step" id="step-2"><div class="step-dot"></div> Generating job card PDF</div>
       <div class="step" id="step-3"><div class="step-dot"></div> Exporting method statement</div>
       <div class="step" id="step-4"><div class="step-dot"></div> Collecting site survey photos</div>
-      <div class="step" id="step-5"><div class="step-dot"></div> Building ZIP archive</div>
+      <div class="step" id="step-5"><div class="step-dot"></div> Packaging files</div>
     </div>
     <p>This usually takes 30–60 seconds.<br/>Your download will start automatically.</p>
     <div class="timer" id="timer">Elapsed: 0s</div>
   </div>
-
-  <!-- READY STATE -->
-  <div id="state-ready">
-    <div class="success-icon">✅</div>
-    <h1>Your download is ready</h1>
-    <div class="job-name" id="job-name-ready"></div>
-    <p>Your ZIP file has been prepared with all job card files, PDFs, and site survey photos.</p>
-    <a id="download-btn" href="#" class="btn" download>
-      ⬇️ Download ZIP
-    </a>
-    <p style="margin-top: 16px; font-size: 12px;">If the download doesn't start automatically, click the button above.</p>
-  </div>
-
-  <!-- ERROR STATE -->
-  <div id="state-error">
-    <div class="error-icon">⚠️</div>
-    <h1>Something went wrong</h1>
-    <p id="error-message">We couldn't prepare your download. Please try again or contact your admin.</p>
-    <button class="btn btn-secondary" onclick="window.location.reload()">Try again</button>
-  </div>
-</div>
-
-<script>
-  const params = new URLSearchParams(window.location.search);
-  const jobId = params.get('job_id');
-  const BASE = window.location.origin;
-
-  let elapsed = 0;
-  let pollInterval;
-  let timerInterval;
-  let currentStep = 0;
-  let stepTimer;
-
-  // Step progression timing (ms)
-  const stepTiming = [0, 5000, 12000, 20000, 35000];
-
-  function showState(name) {
-    ['processing', 'ready', 'error'].forEach(s => {
-      document.getElementById(`state-${s}`).classList.remove('active');
-    });
-    document.getElementById(`state-${name}`).classList.add('active');
-  }
-
-  function advanceStep(n) {
-    for (let i = 1; i <= 5; i++) {
-      const el = document.getElementById(`step-${i}`);
-      el.classList.remove('active', 'done');
-      if (i < n) el.classList.add('done');
-      if (i === n) el.classList.add('active');
-    }
-  }
-
-  function startStepAnimation() {
-    stepTiming.forEach((delay, idx) => {
-      setTimeout(() => advanceStep(idx + 1), delay);
-    });
-  }
-
-  function startTimer() {
-    timerInterval = setInterval(() => {
-      elapsed++;
-      document.getElementById('timer').textContent = `Elapsed: ${elapsed}s`;
-    }, 1000);
-  }
-
-  async function triggerMake() {
-    try {
-      await fetch(`${BASE}/api/trigger`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ job_id: jobId }),
-      });
-    } catch (e) {
-      console.warn('Trigger failed:', e);
-    }
-  }
-
-  async function poll() {
-    try {
-      const res = await fetch(`${BASE}/api/status?job_id=${jobId}`);
-      const data = await res.json();
-
-      if (data.status === 'ready' && data.download_url) {
-        clearInterval(pollInterval);
-        clearInterval(timerInterval);
-
-        // Set job name
-        if (data.job_name) {
-          document.getElementById('job-name-ready').textContent = data.job_name;
-        }
-
-        // Set download button
-        const btn = document.getElementById('download-btn');
-        btn.href = data.download_url;
-
-        showState('ready');
-
-        // Auto-trigger download
-        setTimeout(() => { window.location.href = data.download_url; }, 800);
-
-      } else if (data.status === 'error') {
-        clearInterval(pollInterval);
-        clearInterval(timerInterval);
-        if (data.error_message) {
-          document.getElementById('error-message').textContent = data.error_message;
-        }
-        showState('error');
-      }
-      // status === 'processing' or 'pending' → keep polling
-    } catch (e) {
-      console.warn('Poll error:', e);
-    }
-  }
-
-  async function init() {
-    if (!jobId) {
-      document.getElementById('error-message').textContent = 'No job ID provided in the URL. Please use the link from your Notion job card.';
-      showState('error');
-      return;
-    }
-
-    showState('processing');
-    startTimer();
-    startStepAnimation();
-    await triggerMake();
-
-    // Poll every 4 seconds
-    pollInterval = setInterval(poll, 4000);
-    poll(); // immediate first check
-  }
-
-  init();
-</script>
-</body>
-</html>
