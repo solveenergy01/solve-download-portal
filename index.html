@@ -271,7 +271,7 @@
   <!-- ERROR STATE -->
   <div id="state-error">
     <div class="error-icon">⚠️</div>
-    <h1>Something went wrong please check</h1>
+    <h1>Something went wrong</h1>
     <p id="error-message">We couldn't prepare your download. Please try again or contact your admin.</p>
     <button class="btn btn-secondary" onclick="window.location.reload()">Try again</button>
   </div>
@@ -289,8 +289,8 @@
   let downloadUrl = null;
   let downloadFilename = 'JobCard.pdf';
 
+  const stepTiming = [0, 5000, 12000, 20000, 35000];
   const POLL_TIMEOUT_MS = 120000;
-  let currentStep = 0;
 
   function decodeParam(value) {
     if (!value) return null;
@@ -315,33 +315,18 @@
   }
 
   function advanceStep(n) {
-    currentStep = n;
     for (let i = 1; i <= 5; i++) {
       const el = document.getElementById(`step-${i}`);
       el.classList.remove('active', 'done');
-      if (n > 5 || i < n) el.classList.add('done');
-      if (i === n && n <= 5) el.classList.add('active');
+      if (i < n) el.classList.add('done');
+      if (i === n) el.classList.add('active');
     }
   }
 
-  function updateProgressFromStatus(data) {
-    if (data.job_name) {
-      document.getElementById('job-name-processing').textContent = data.job_name;
-    }
-
-    if (data.status === 'ready') {
-      advanceStep(6);
-      return;
-    }
-
-    if (data.step && data.step >= 1 && data.step <= 5) {
-      advanceStep(data.step);
-      return;
-    }
-
-    if (data.status === 'processing' && currentStep < 1) {
-      advanceStep(1);
-    }
+  function startStepAnimation() {
+    stepTiming.forEach((delay, idx) => {
+      setTimeout(() => advanceStep(idx + 1), delay);
+    });
   }
 
   function startTimer() {
@@ -402,7 +387,6 @@
 
   function handleReady(url, jobName) {
     stopPolling();
-    advanceStep(6);
 
     downloadUrl = url;
     downloadFilename = jobName ? `${jobName}.pdf` : 'JobCard.pdf';
@@ -432,8 +416,6 @@
           document.getElementById('error-message').textContent = data.error_message;
         }
         showState('error');
-      } else {
-        updateProgressFromStatus(data);
       }
     } catch (e) {
       console.warn('Poll error:', e);
@@ -460,7 +442,7 @@
 
     showState('processing');
     startTimer();
-    advanceStep(1);
+    startStepAnimation();
     await triggerMake();
 
     pollInterval = setInterval(poll, 4000);
