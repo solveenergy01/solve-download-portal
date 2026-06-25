@@ -283,6 +283,23 @@
       opacity: 0.88;
     }
 
+    .pdf-viewer {
+      margin-top: 20px;
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #1a1a1a;
+    }
+
+    .pdf-frame {
+      width: 100%;
+      height: 420px;
+      border: none;
+      display: block;
+      background: #fff;
+    }
+
     #state-main, #state-error { display: none; }
     #state-main.active, #state-error.active { display: block; }
   </style>
@@ -320,8 +337,11 @@
     </div>
 
     <div id="ready-content" class="hidden-block">
-      <p>Your Job Card PDF is ready. It will open for viewing now and download automatically in a moment.</p>
-      <p class="download-fallback">If nothing happens, <a href="#" id="download-link" class="download-link">download again</a> or <a href="#" id="view-link" class="download-link">view in browser</a>.</p>
+      <p>Your Job Card PDF is ready. It is shown below and will download automatically in a moment.</p>
+      <div id="pdf-viewer" class="pdf-viewer hidden-block">
+        <iframe id="pdf-frame" class="pdf-frame" title="Job Card PDF"></iframe>
+      </div>
+      <p class="download-fallback">If nothing happens, <a href="#" id="download-link" class="download-link">download again</a> or <a href="#" id="view-link" class="download-link">open in new tab</a>.</p>
     </div>
   </div>
 
@@ -449,14 +469,18 @@
     document.body.removeChild(form);
   }
 
-  function openPdfInBrowser(url) {
-    // New tab keeps the ready page open and loads the PDF directly from S3 (fastest path)
-    const opened = window.open(url, '_blank', 'noopener,noreferrer');
-    if (opened) return;
+  function openPdfView(url) {
+    const viewer = document.getElementById('pdf-viewer');
+    const frame = document.getElementById('pdf-frame');
+    if (viewer && frame) {
+      frame.src = url;
+      viewer.classList.remove('hidden-block');
+      return;
+    }
 
+    // Fallback: same-tab navigation (not blocked by popup blocker)
     const a = document.createElement('a');
     a.href = url;
-    a.target = '_blank';
     a.rel = 'noopener noreferrer';
     a.style.display = 'none';
     document.body.appendChild(a);
@@ -464,10 +488,12 @@
     document.body.removeChild(a);
   }
 
+  function openPdfInNewTab(url) {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
   function triggerReadyActions(url, filename) {
-    // Open view first (direct S3 — one hop, full bandwidth)
-    openPdfInBrowser(url);
-    // Delay download so it doesn't compete with the PDF view loading from S3
+    openPdfView(url);
     setTimeout(() => downloadViaFormPost(url, filename), 2000);
   }
 
@@ -542,7 +568,7 @@
     viewLink.rel = 'noopener noreferrer';
     viewLink.onclick = (e) => {
       e.preventDefault();
-      openPdfInBrowser(downloadUrl);
+      openPdfInNewTab(downloadUrl);
     };
 
     if (options.instant) {
