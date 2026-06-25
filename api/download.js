@@ -1,11 +1,24 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
   }
 
-  const { url, filename } = req.query;
+  let url;
+  let filename;
+
+  if (req.method === 'POST') {
+    url = req.body?.url;
+    filename = req.body?.filename;
+  } else if (req.method === 'GET') {
+    url = req.query.url;
+    filename = req.query.filename;
+  } else {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
   if (!url) {
     return res.status(400).json({ error: 'Missing url' });

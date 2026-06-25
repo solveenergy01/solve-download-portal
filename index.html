@@ -415,78 +415,51 @@
     }
   }
 
-  function triggerDownload(url, filename) {
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename || 'JobCard.pdf';
-    a.rel = 'noopener noreferrer';
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }
+  async function forceDownload(url, filename) {
+    if (!url || !url.startsWith('http')) {
+      console.error('Invalid download URL:', url);
+      return false;
+    }
 
-  // Hidden iframe avoids popup blockers on async/auto-triggered downloads
-  function triggerAutoDownload(url) {
-    const iframe = document.createElement('iframe');
-    iframe.style.cssText = 'position:fixed;width:0;height:0;border:0;visibility:hidden';
-    iframe.src = url;
-    document.body.appendChild(iframe);
-    setTimeout(() => iframe.remove(), 120000);
-  }
-
-  async function forceDownloadViaProxy(url, filename) {
+    const safeName = filename || 'JobCard.pdf';
     const isSameOrigin = url.startsWith(BASE) || url.startsWith('/');
-    const downloadTarget = isSameOrigin ? url : getProxyDownloadUrl(url, filename);
 
     try {
-      const response = await fetch(downloadTarget);
+      const response = isSameOrigin
+        ? await fetch(url)
+        : await fetch(`${BASE}/api/download`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url, filename: safeName }),
+          });
+
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
       const blob = await response.blob();
       const blobUrl = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = blobUrl;
-      a.download = filename;
+      a.download = safeName;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(blobUrl);
+      return true;
     } catch (e) {
-      console.warn('Proxy download failed, using direct link:', e);
-      triggerAutoDownload(url);
+      console.warn('Download failed:', e);
+      return false;
     }
-  }
-
-  function getProxyDownloadUrl(url, filename) {
-    const proxy = new URL(`${BASE}/api/download`);
-    proxy.searchParams.set('url', url);
-    proxy.searchParams.set('filename', filename);
-    return proxy.toString();
-  }
-
-  function isPresignedS3Url(url) {
-    return url.includes('amazonaws.com') || url.includes('X-Amz-Algorithm');
-  }
-
-  async function forceDownload(url, filename, options = {}) {
-    const isSameOrigin = url.startsWith(BASE) || url.startsWith('/');
-    const fromUserClick = options.fromUserClick === true;
-
-    // Presigned S3: iframe for auto (no popup block), anchor click when user taps link
-    if (!isSameOrigin && isPresignedS3Url(url)) {
-      if (fromUserClick) {
-        triggerDownload(url, filename);
-      } else {
-        triggerAutoDownload(url);
-      }
-      return;
-    }
-
-    await forceDownloadViaProxy(url, filename);
   }
 
   function handleReady(url, jobName, options = {}) {
     if (downloadHandled) return;
+
+    if (!url || !url.startsWith('http')) {
+      document.getElementById('error-message').textContent = 'Download link is missing or invalid. Please try again or contact your admin.';
+      showState('error');
+      return;
+    }
+
     downloadHandled = true;
     stopPolling();
     showState('main');
@@ -498,10 +471,16 @@
       document.getElementById('job-name').textContent = jobName;
     }
 
-    document.getElementById('download-link').href = url;
-    document.getElementById('download-link').onclick = (e) => {
+    const downloadLink = document.getElementById('download-link');
+    downloadLink.href = url;
+    downloadLink.target = '_blank';
+    downloadLink.rel = 'noopener noreferrer';
+    downloadLink.onclick = async (e) => {
       e.preventDefault();
-      forceDownload(downloadUrl, downloadFilename, { fromUserClick: true });
+      const ok = await forceDownload(downloadUrl, downloadFilename);
+      if (!ok) {
+        window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+      }
     };
 
     if (options.instant) {
@@ -513,7 +492,14 @@
       transitionToReady(jobName);
     }
 
-    forceDownload(downloadUrl, downloadFilename);
+    forceDownload(downloadUrl, downloadFilename).then((ok) => {
+      if (!ok) {
+        const readyText = document.querySelector('#ready-content p');
+        if (readyText) {
+          readyText.textContent = 'Your Job Card PDF is ready. Please click the link below to download.';
+        }
+      }
+    });
   }
 
   async function poll() {
