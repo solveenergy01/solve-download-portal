@@ -419,7 +419,6 @@
     const a = document.createElement('a');
     a.href = url;
     a.download = filename || 'JobCard.pdf';
-    a.target = '_blank';
     a.rel = 'noopener noreferrer';
     a.style.display = 'none';
     document.body.appendChild(a);
@@ -427,26 +426,17 @@
     document.body.removeChild(a);
   }
 
-  function getProxyDownloadUrl(url, filename) {
-    const proxy = new URL(`${BASE}/api/download`);
-    proxy.searchParams.set('url', url);
-    proxy.searchParams.set('filename', filename);
-    return proxy.toString();
+  // Hidden iframe avoids popup blockers on async/auto-triggered downloads
+  function triggerAutoDownload(url) {
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;width:0;height:0;border:0;visibility:hidden';
+    iframe.src = url;
+    document.body.appendChild(iframe);
+    setTimeout(() => iframe.remove(), 120000);
   }
 
-  function isPresignedS3Url(url) {
-    return url.includes('amazonaws.com') || url.includes('X-Amz-Algorithm');
-  }
-
-  async function forceDownload(url, filename) {
+  async function forceDownloadViaProxy(url, filename) {
     const isSameOrigin = url.startsWith(BASE) || url.startsWith('/');
-
-    // Presigned S3 URLs work via direct navigation (no CORS) — skip slow Vercel proxy hop
-    if (!isSameOrigin && isPresignedS3Url(url)) {
-      triggerDownload(url, filename);
-      return;
-    }
-
     const downloadTarget = isSameOrigin ? url : getProxyDownloadUrl(url, filename);
 
     try {
@@ -462,9 +452,37 @@
       document.body.removeChild(a);
       window.URL.revokeObjectURL(blobUrl);
     } catch (e) {
-      console.warn('Download failed, using direct link:', e);
-      triggerDownload(url, filename);
+      console.warn('Proxy download failed, using direct link:', e);
+      triggerAutoDownload(url);
     }
+  }
+
+  function getProxyDownloadUrl(url, filename) {
+    const proxy = new URL(`${BASE}/api/download`);
+    proxy.searchParams.set('url', url);
+    proxy.searchParams.set('filename', filename);
+    return proxy.toString();
+  }
+
+  function isPresignedS3Url(url) {
+    return url.includes('amazonaws.com') || url.includes('X-Amz-Algorithm');
+  }
+
+  async function forceDownload(url, filename, options = {}) {
+    const isSameOrigin = url.startsWith(BASE) || url.startsWith('/');
+    const fromUserClick = options.fromUserClick === true;
+
+    // Presigned S3: iframe for auto (no popup block), anchor click when user taps link
+    if (!isSameOrigin && isPresignedS3Url(url)) {
+      if (fromUserClick) {
+        triggerDownload(url, filename);
+      } else {
+        triggerAutoDownload(url);
+      }
+      return;
+    }
+
+    await forceDownloadViaProxy(url, filename);
   }
 
   function handleReady(url, jobName, options = {}) {
@@ -480,9 +498,10 @@
       document.getElementById('job-name').textContent = jobName;
     }
 
+    document.getElementById('download-link').href = url;
     document.getElementById('download-link').onclick = (e) => {
       e.preventDefault();
-      forceDownload(downloadUrl, downloadFilename);
+      forceDownload(downloadUrl, downloadFilename, { fromUserClick: true });
     };
 
     if (options.instant) {
