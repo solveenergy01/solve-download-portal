@@ -320,8 +320,8 @@
     </div>
 
     <div id="ready-content" class="hidden-block">
-      <p>Your Job Card PDF has been prepared. It will download automatically.</p>
-      <p class="download-fallback">If the download doesn't start, <a href="#" id="download-link" class="download-link">click here</a> or <a href="#" id="view-link" class="download-link">view in browser</a>.</p>
+      <p>Your Job Card PDF is ready. It will download automatically and open for viewing.</p>
+      <p class="download-fallback">If nothing happens, <a href="#" id="download-link" class="download-link">download again</a> or <a href="#" id="view-link" class="download-link">view in browser</a>.</p>
     </div>
   </div>
 
@@ -449,6 +449,23 @@
     document.body.removeChild(form);
   }
 
+  function openPdfInBrowser(url) {
+    const a = document.createElement('a');
+    a.href = url;
+    a.rel = 'noopener noreferrer';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  function triggerReadyActions(url, filename) {
+    // 1. Save file to device (via proxy with attachment header)
+    downloadViaFormPost(url, filename);
+    // 2. Open PDF in browser (direct S3 link)
+    openPdfInBrowser(url);
+  }
+
   async function forceDownload(url, filename) {
     if (!url || !url.startsWith('http')) {
       console.error('Invalid download URL:', url);
@@ -500,8 +517,8 @@
     downloadUrl = url;
     downloadFilename = jobName ? `${jobName}.pdf` : 'JobCard.pdf';
 
-    // Start download immediately — before UI animation
-    forceDownload(downloadUrl, downloadFilename);
+    // Start both download + view immediately — before UI animation
+    triggerReadyActions(downloadUrl, downloadFilename);
 
     if (jobName) {
       document.getElementById('job-name').textContent = jobName;
@@ -518,7 +535,10 @@
     viewLink.href = url;
     viewLink.target = '_blank';
     viewLink.rel = 'noopener noreferrer';
-    viewLink.onclick = null;
+    viewLink.onclick = (e) => {
+      e.preventDefault();
+      openPdfInBrowser(downloadUrl);
+    };
 
     if (options.instant) {
       document.getElementById('state-main').classList.add('is-ready');
