@@ -434,8 +434,19 @@
     return proxy.toString();
   }
 
+  function isPresignedS3Url(url) {
+    return url.includes('amazonaws.com') || url.includes('X-Amz-Algorithm');
+  }
+
   async function forceDownload(url, filename) {
     const isSameOrigin = url.startsWith(BASE) || url.startsWith('/');
+
+    // Presigned S3 URLs work via direct navigation (no CORS) — skip slow Vercel proxy hop
+    if (!isSameOrigin && isPresignedS3Url(url)) {
+      triggerDownload(url, filename);
+      return;
+    }
+
     const downloadTarget = isSameOrigin ? url : getProxyDownloadUrl(url, filename);
 
     try {
