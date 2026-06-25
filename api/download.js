@@ -1,3 +1,5 @@
+import { Readable } from 'node:stream';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -41,13 +43,29 @@ export default async function handler(req, res) {
       return res.status(response.status).json({ error: 'Failed to fetch file' });
     }
 
-    const buffer = Buffer.from(await response.arrayBuffer());
     const safeName = (filename || 'JobCard.pdf').replace(/[^\w\s.-]/g, '_');
+    const contentType = response.headers.get('content-type') || 'application/pdf';
+    const contentLength = response.headers.get('content-length');
 
-    res.setHeader('Content-Type', response.headers.get('content-type') || 'application/pdf');
+    res.setHeader('Content-Type', contentType);
     res.setHeader('Content-Disposition', `attachment; filename="${safeName}"`);
     res.setHeader('Cache-Control', 'no-store');
-    return res.status(200).send(buffer);
+    if (contentLength) {
+      res.setHeader('Content-Length', contentLength);
+    }
+
+    if (!response.body) {
+      const buffer = Buffer.from(await response.arrayBuffer());
+      return res.status(200).send(buffer);
+    }
+
+    const nodeStream = Readable.fromWeb(response.body);
+    await new Promise((resolve, reject) => {
+      nodeStream.on('error', reject);
+      res.on('error', reject);
+      res.on('finish', resolve);
+      nodeStream.pipe(res);
+    });
   } catch (e) {
     console.error('Download proxy error:', e);
     return res.status(500).json({ error: 'Download failed' });

@@ -320,8 +320,8 @@
     </div>
 
     <div id="ready-content" class="hidden-block">
-      <p>Your Job Card PDF has been prepared and is ready to download.</p>
-      <p class="download-fallback">If the download doesn't start automatically, <a href="#" id="download-link" class="download-link">click here</a>.</p>
+      <p>Your Job Card PDF has been prepared. It will download automatically.</p>
+      <p class="download-fallback">If the download doesn't start, <a href="#" id="download-link" class="download-link">click here</a> or <a href="#" id="view-link" class="download-link">view in browser</a>.</p>
     </div>
   </div>
 
@@ -415,24 +415,21 @@
     }
   }
 
-  function isPresignedExternalUrl(url) {
-    return url.includes('amazonaws.com') || url.includes('X-Amz-Algorithm');
-  }
-
-  function triggerDirectDownload(url) {
-    const a = document.createElement('a');
-    a.href = url;
-    a.rel = 'noopener noreferrer';
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }
-
   function downloadViaFormPost(url, filename) {
+    const iframeName = 'download-frame';
+    let iframe = document.getElementById(iframeName);
+    if (!iframe) {
+      iframe = document.createElement('iframe');
+      iframe.name = iframeName;
+      iframe.id = iframeName;
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+    }
+
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = `${BASE}/api/download`;
+    form.target = iframeName;
     form.style.display = 'none';
 
     const urlInput = document.createElement('input');
@@ -461,13 +458,7 @@
     const safeName = filename || 'JobCard.pdf';
     const isSameOrigin = url.startsWith(BASE) || url.startsWith('/');
 
-    // S3 presigned URLs: browser downloads directly (one hop, no Vercel proxy wait)
-    if (!isSameOrigin && isPresignedExternalUrl(url)) {
-      triggerDirectDownload(url);
-      return true;
-    }
-
-    // Other external URLs: form POST through proxy
+    // Proxy with Content-Disposition: attachment — saves file instead of opening in browser
     if (!isSameOrigin) {
       downloadViaFormPost(url, safeName);
       return true;
@@ -517,18 +508,17 @@
     }
 
     const downloadLink = document.getElementById('download-link');
-    downloadLink.href = url;
-    downloadLink.rel = 'noopener noreferrer';
-    if (isPresignedExternalUrl(url)) {
-      downloadLink.removeAttribute('target');
-      downloadLink.onclick = null;
-    } else {
-      downloadLink.target = '_blank';
-      downloadLink.onclick = (e) => {
-        e.preventDefault();
-        forceDownload(downloadUrl, downloadFilename);
-      };
-    }
+    downloadLink.href = '#';
+    downloadLink.onclick = (e) => {
+      e.preventDefault();
+      forceDownload(downloadUrl, downloadFilename);
+    };
+
+    const viewLink = document.getElementById('view-link');
+    viewLink.href = url;
+    viewLink.target = '_blank';
+    viewLink.rel = 'noopener noreferrer';
+    viewLink.onclick = null;
 
     if (options.instant) {
       document.getElementById('state-main').classList.add('is-ready');
