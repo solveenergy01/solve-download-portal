@@ -321,7 +321,7 @@
 
     <div id="ready-content" class="hidden-block">
       <p>Your Job Card PDF is ready. It will open in a new tab and download automatically in a moment.</p>
-      <p class="download-fallback">If nothing happens, <a href="#" id="download-link" class="download-link">download again</a> or <a href="#" id="view-link" class="download-link">view in browser</a>.</p>
+      <p class="download-fallback">If the download doesn't start automatically, <a href="#" id="download-link" class="download-link">click here</a>.</p>
     </div>
   </div>
 
@@ -532,11 +532,6 @@
       e.preventDefault();
       forceDownload(downloadUrl, downloadFilename);
     };
-
-    const viewLink = document.getElementById('view-link');
-    viewLink.href = url;
-    viewLink.target = '_blank';
-    viewLink.rel = 'noopener noreferrer';
 
     if (options.instant) {
       document.getElementById('state-main').classList.add('is-ready');
