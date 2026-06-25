@@ -41,6 +41,34 @@
       max-width: 480px;
       width: 100%;
       text-align: center;
+      transition: max-width 0.4s ease;
+    }
+
+    .card.has-pdf {
+      max-width: 920px;
+    }
+
+    body.pdf-open {
+      justify-content: flex-start;
+      padding-top: 24px;
+    }
+
+    .pdf-viewer-wrap {
+      margin-top: 24px;
+      width: 100%;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #fff;
+      text-align: left;
+    }
+
+    #pdf-viewer {
+      width: 100%;
+      height: 70vh;
+      min-height: 420px;
+      border: none;
+      display: block;
     }
 
     .logo {
@@ -283,30 +311,13 @@
       opacity: 0.88;
     }
 
-    .pdf-viewer {
-      margin-top: 20px;
-      width: 100%;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-      background: #1a1a1a;
-    }
-
-    .pdf-frame {
-      width: 100%;
-      height: 420px;
-      border: none;
-      display: block;
-      background: #fff;
-    }
-
     #state-main, #state-error { display: none; }
     #state-main.active, #state-error.active { display: block; }
   </style>
 </head>
 <body>
 
-<div class="card">
+<div class="card" id="main-card">
   <div class="logo">
     <img src="assets/solve-logo.png" alt="Solve" class="logo-img" />
   </div>
@@ -337,11 +348,12 @@
     </div>
 
     <div id="ready-content" class="hidden-block">
-      <p>Your Job Card PDF is ready. It is shown below and will download automatically in a moment.</p>
-      <div id="pdf-viewer" class="pdf-viewer hidden-block">
-        <iframe id="pdf-frame" class="pdf-frame" title="Job Card PDF"></iframe>
-      </div>
-      <p class="download-fallback">If nothing happens, <a href="#" id="download-link" class="download-link">download again</a> or <a href="#" id="view-link" class="download-link">open in new tab</a>.</p>
+      <p>Your Job Card PDF is ready. It will appear below and download automatically in a moment.</p>
+      <p class="download-fallback">If nothing happens, <a href="#" id="download-link" class="download-link">download again</a> or <a href="#" id="view-link" class="download-link">show PDF below</a>.</p>
+    </div>
+
+    <div id="pdf-viewer-wrap" class="pdf-viewer-wrap hidden-block">
+      <iframe id="pdf-viewer" title="Job Card PDF"></iframe>
     </div>
   </div>
 
@@ -469,31 +481,19 @@
     document.body.removeChild(form);
   }
 
-  function openPdfView(url) {
+  function openPdfInBrowser(url) {
+    const wrap = document.getElementById('pdf-viewer-wrap');
     const viewer = document.getElementById('pdf-viewer');
-    const frame = document.getElementById('pdf-frame');
-    if (viewer && frame) {
-      frame.src = url;
-      viewer.classList.remove('hidden-block');
-      return;
-    }
-
-    // Fallback: same-tab navigation (not blocked by popup blocker)
-    const a = document.createElement('a');
-    a.href = url;
-    a.rel = 'noopener noreferrer';
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }
-
-  function openPdfInNewTab(url) {
-    window.open(url, '_blank', 'noopener,noreferrer');
+    viewer.src = url;
+    wrap.classList.remove('hidden-block');
+    document.getElementById('main-card').classList.add('has-pdf');
+    document.body.classList.add('pdf-open');
   }
 
   function triggerReadyActions(url, filename) {
-    openPdfView(url);
+    // Open view first (direct S3 — one hop, full bandwidth)
+    openPdfInBrowser(url);
+    // Delay download so it doesn't compete with the PDF view loading from S3
     setTimeout(() => downloadViaFormPost(url, filename), 2000);
   }
 
@@ -548,9 +548,6 @@
     downloadUrl = url;
     downloadFilename = jobName ? `${jobName}.pdf` : 'JobCard.pdf';
 
-    // Start both download + view immediately — before UI animation
-    triggerReadyActions(downloadUrl, downloadFilename);
-
     if (jobName) {
       document.getElementById('job-name').textContent = jobName;
     }
@@ -563,12 +560,10 @@
     };
 
     const viewLink = document.getElementById('view-link');
-    viewLink.href = url;
-    viewLink.target = '_blank';
-    viewLink.rel = 'noopener noreferrer';
+    viewLink.href = '#';
     viewLink.onclick = (e) => {
       e.preventDefault();
-      openPdfInNewTab(downloadUrl);
+      openPdfInBrowser(downloadUrl);
     };
 
     if (options.instant) {
@@ -576,8 +571,10 @@
       document.getElementById('status-title').textContent = 'Your Download Is Ready';
       document.getElementById('processing-content').classList.add('hidden-block');
       document.getElementById('ready-content').classList.remove('hidden-block');
+      triggerReadyActions(downloadUrl, downloadFilename);
     } else {
       transitionToReady(jobName);
+      setTimeout(() => triggerReadyActions(downloadUrl, downloadFilename), 320);
     }
   }
 
