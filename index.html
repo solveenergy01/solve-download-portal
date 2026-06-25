@@ -320,7 +320,7 @@
     </div>
 
     <div id="ready-content" class="hidden-block">
-      <p>Your Job Card PDF is ready. It will download automatically and open for viewing.</p>
+      <p>Your Job Card PDF is ready. It will open for viewing now and download automatically in a moment.</p>
       <p class="download-fallback">If nothing happens, <a href="#" id="download-link" class="download-link">download again</a> or <a href="#" id="view-link" class="download-link">view in browser</a>.</p>
     </div>
   </div>
@@ -450,8 +450,13 @@
   }
 
   function openPdfInBrowser(url) {
+    // New tab keeps the ready page open and loads the PDF directly from S3 (fastest path)
+    const opened = window.open(url, '_blank', 'noopener,noreferrer');
+    if (opened) return;
+
     const a = document.createElement('a');
     a.href = url;
+    a.target = '_blank';
     a.rel = 'noopener noreferrer';
     a.style.display = 'none';
     document.body.appendChild(a);
@@ -460,10 +465,10 @@
   }
 
   function triggerReadyActions(url, filename) {
-    // 1. Save file to device (via proxy with attachment header)
-    downloadViaFormPost(url, filename);
-    // 2. Open PDF in browser (direct S3 link)
+    // Open view first (direct S3 — one hop, full bandwidth)
     openPdfInBrowser(url);
+    // Delay download so it doesn't compete with the PDF view loading from S3
+    setTimeout(() => downloadViaFormPost(url, filename), 2000);
   }
 
   async function forceDownload(url, filename) {
