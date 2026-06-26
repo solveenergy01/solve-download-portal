@@ -346,6 +346,7 @@
   let downloadUrl = null;
   let downloadFilename = 'JobCard.pdf';
   let downloadHandled = false;
+  let readyActionsHandled = false;
 
   const POLL_TIMEOUT_MS = 120000;
   const POLL_INTERVAL_MS = 1000;
@@ -450,10 +451,6 @@
   }
 
   function openPdfInBrowser(url) {
-    // New tab keeps the ready page open and loads the PDF directly from S3 (fastest path)
-    const opened = window.open(url, '_blank', 'noopener,noreferrer');
-    if (opened) return;
-
     const a = document.createElement('a');
     a.href = url;
     a.target = '_blank';
@@ -465,9 +462,10 @@
   }
 
   function triggerReadyActions(url, filename) {
-    // Open view first (direct S3 — one hop, full bandwidth)
+    if (readyActionsHandled) return;
+    readyActionsHandled = true;
+
     openPdfInBrowser(url);
-    // Delay download so it doesn't compete with the PDF view loading from S3
     setTimeout(() => downloadViaFormPost(url, filename), 2000);
   }
 
@@ -551,6 +549,7 @@
       const data = await res.json();
 
       if (data.status === 'ready' && data.download_url) {
+        stopPolling();
         handleReady(data.download_url, data.job_name || null);
       } else if (data.status === 'error') {
         stopPolling();
