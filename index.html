@@ -518,7 +518,7 @@
     showState('main');
 
     downloadUrl = url;
-    downloadFilename = jobName ? `${jobName}.pdf` : 'JobCard.pdf';
+    downloadFilename = jobName ? `${jobName.replace(/\.pdf$/i, '')}.pdf` : 'JobCard.pdf';
 
     if (jobName) {
       document.getElementById('job-name').textContent = jobName;

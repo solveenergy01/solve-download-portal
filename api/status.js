@@ -24,16 +24,16 @@ export default function handler(req, res) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { status, step, download_url, job_name, error_message } = req.body;
+    const body = req.body;
     const existing = jobs[job_id] || {};
 
+    // Use 'in' checks so explicitly-passed null clears a field (e.g. reset on new run)
     jobs[job_id] = {
-      ...existing,
-      status: status ?? existing.status,
-      step: step ?? existing.step,
-      download_url: download_url ?? existing.download_url,
-      job_name: job_name ?? existing.job_name,
-      error_message: error_message ?? existing.error_message,
+      status:        'status'        in body ? body.status        : existing.status,
+      step:          'step'          in body ? body.step          : existing.step,
+      download_url:  'download_url'  in body ? body.download_url  : existing.download_url,
+      job_name:      'job_name'      in body ? body.job_name      : existing.job_name,
+      error_message: 'error_message' in body ? body.error_message : existing.error_message,
       updated_at: new Date().toISOString(),
     };
 
