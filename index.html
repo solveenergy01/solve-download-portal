@@ -351,6 +351,11 @@
   const POLL_TIMEOUT_MS = 120000;
   const POLL_INTERVAL_MS = 1000;
 
+  function formatJobName(name) {
+    if (!name) return '';
+    return name.replace(/\.pdf$/i, '').replace(/_+/g, ' ').trim();
+  }
+
   function decodeParam(value) {
     if (!value) return null;
     try {
@@ -379,7 +384,7 @@
     document.getElementById('status-title').textContent = 'Your Download Is Ready';
 
     if (jobName) {
-      document.getElementById('job-name').textContent = jobName;
+      document.getElementById('job-name').textContent = formatJobName(jobName);
     }
 
     const processingContent = document.getElementById('processing-content');
@@ -518,10 +523,10 @@
     showState('main');
 
     downloadUrl = url;
-    downloadFilename = jobName ? `${jobName.replace(/\.pdf$/i, '').replace(/_+/g, ' ').trim()}.pdf` : 'JobCard.pdf';
+    downloadFilename = jobName ? `${formatJobName(jobName)}.pdf` : 'JobCard.pdf';
 
     if (jobName) {
-      document.getElementById('job-name').textContent = jobName;
+      document.getElementById('job-name').textContent = formatJobName(jobName);
     }
 
     const downloadLink = document.getElementById('download-link');
