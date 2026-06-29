@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>View Image — Solve Energy</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #0A0A0A;
+      color: #F5F5F5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px;
+    }
+    .header {
+      width: 100%;
+      max-width: 960px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #F97316;
+      word-break: break-word;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #F97316;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn:hover { opacity: 0.9; }
+    .panel {
+      width: 100%;
+      max-width: 960px;
+      background: #141414;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 24px;
+      min-height: 320px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .status {
+      color: #888;
+      font-size: 14px;
+      text-align: center;
+      line-height: 1.6;
+    }
+    .status.error { color: #EF4444; }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid #222;
+      border-top-color: #F97316;
+      animation: spin 0.9s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #preview {
+      max-width: 100%;
+      max-height: 80vh;
+      border-radius: 8px;
+      display: none;
+    }
+    #preview.visible { display: block; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title" id="image-title">Loading image…</div>
+    <a href="#" id="download-btn" class="btn" style="display:none">Download</a>
+  </div>
+
+  <div class="panel">
+    <div id="loading" class="status">
+      <div class="spinner"></div>
+      Preparing image for viewing…
+    </div>
+    <div id="error" class="status error" style="display:none"></div>
+    <img id="preview" alt="Image preview" />
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const imageUrl = params.get('url');
+    const imageName = params.get('name') || 'image.heic';
+    const BASE = window.location.origin;
+
+    const loadingEl = document.getElementById('loading');
+    const errorEl = document.getElementById('error');
+    const previewEl = document.getElementById('preview');
+    const titleEl = document.getElementById('image-title');
+    const downloadBtn = document.getElementById('download-btn');
+
+    function showError(message) {
+      loadingEl.style.display = 'none';
+      errorEl.style.display = 'block';
+      errorEl.textContent = message;
+    }
+
+    function showPreview(objectUrl) {
+      loadingEl.style.display = 'none';
+      previewEl.src = objectUrl;
+      previewEl.classList.add('visible');
+      downloadBtn.style.display = 'inline-flex';
+      downloadBtn.href = objectUrl;
+      downloadBtn.download = imageName.replace(/\.heic$/i, '.jpg');
+    }
+
+    async function init() {
+      if (!imageUrl) {
+        showError('No image URL provided.');
+        return;
+      }
+
+      titleEl.textContent = imageName;
+
+      try {
+        const proxyUrl = `${BASE}/api/view?url=${encodeURIComponent(imageUrl)}&filename=${encodeURIComponent(imageName)}`;
+        const response = await fetch(proxyUrl);
+        if (!response.ok) throw new Error('Could not load image from server.');
+
+        const blob = await response.blob();
+        const isHeic = /\.heic$/i.test(imageName) || /\.heic/i.test(imageUrl.split('?')[0]);
+
+        if (isHeic) {
+          const converted = await heic2any({ blob, toType: 'image/jpeg', quality: 0.92 });
+          const jpegBlob = Array.isArray(converted) ? converted[0] : converted;
+          showPreview(URL.createObjectURL(jpegBlob));
+        } else {
+          showPreview(URL.createObjectURL(blob));
+        }
+      } catch (e) {
+        console.error(e);
+        showError('Unable to display this image. You can try opening the original file directly.');
+        downloadBtn.style.display = 'inline-flex';
+        downloadBtn.textContent = 'Open original';
+        downloadBtn.href = imageUrl;
+        downloadBtn.removeAttribute('download');
+        downloadBtn.target = '_blank';
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
