@@ -186,15 +186,6 @@
       color: var(--text);
     }
 
-    .detail {
-      font-size: 13px;
-      color: var(--orange);
-      font-weight: 500;
-      margin-bottom: 16px;
-      min-height: 18px;
-      word-break: break-word;
-    }
-
     p {
       font-size: 14px;
       color: var(--muted);
@@ -256,7 +247,6 @@
       </div>
     </div>
     <h1>Unsubscribed successfully</h1>
-    <div class="detail" id="success-detail"></div>
     <p>You have been unsubscribed and will no longer receive this email. If this was a mistake, contact us at <a href="mailto:projects@solveenergy.ca" style="color:var(--orange);">projects@solveenergy.ca</a>.</p>
   </div>
 
@@ -307,11 +297,7 @@
     });
   }
 
-  function showSuccess(email, template) {
-    const detailParts = [];
-    if (email) detailParts.push(email);
-    if (template) detailParts.push(template);
-    document.getElementById('success-detail').textContent = detailParts.join(' · ');
+  function showSuccess() {
     showState('success');
     playSuccessAnimation();
   }
@@ -327,7 +313,7 @@
 
     // Make redirected here after recording the unsubscribe — just show success
     if (status === 'success' || status === 'done' || status === 'ok') {
-      showSuccess(email, template);
+      showSuccess();
       return;
     }
 
@@ -358,7 +344,7 @@
         throw new Error(data.error || `Request failed (${res.status})`);
       }
 
-      showSuccess(email, template);
+      showSuccess();
     } catch (e) {
       console.error(e);
       document.getElementById('error-message').textContent =
