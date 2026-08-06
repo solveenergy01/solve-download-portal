@@ -220,7 +220,7 @@
 
 <div class="card">
   <div class="logo">
-    <img src="assets/solve-logo.png" alt="Solve" class="logo-img" />
+    <img src="https://solve-download-portal.vercel.app/assets/solve-logo.png" alt="Solve" class="logo-img" />
   </div>
 
   <!-- PROCESSING -->
@@ -260,18 +260,6 @@
 </div>
 
 <script>
-  const params = new URLSearchParams(window.location.search);
-  const BASE = window.location.origin;
-
-  function decodeParam(value) {
-    if (!value) return '';
-    try {
-      return decodeURIComponent(value).trim();
-    } catch {
-      return String(value).trim();
-    }
-  }
-
   function showState(name) {
     ['state-main', 'state-success', 'state-error'].forEach((id) => {
       document.getElementById(id).classList.toggle('active', id === `state-${name}`);
@@ -297,62 +285,10 @@
     });
   }
 
-  function showSuccess() {
-    showState('success');
-    playSuccessAnimation();
-  }
-
-  async function init() {
-    const email = decodeParam(params.get('email') || params.get('contact_email'));
-    const template = decodeParam(
-      params.get('template') ||
-      params.get('template_name') ||
-      params.get('email_template')
-    );
-    const status = decodeParam(params.get('status')).toLowerCase();
-
-    // Make redirected here after recording the unsubscribe — just show success
-    if (status === 'success' || status === 'done' || status === 'ok') {
-      showSuccess();
-      return;
-    }
-
-    if (!email) {
-      document.getElementById('error-message').textContent =
-        'Missing email in the unsubscribe link. Please use the link from your email.';
-      showState('error');
-      return;
-    }
-
-    // Fallback: page calls Make itself (if link points directly to this page)
-    showState('main');
-
-    try {
-      const res = await fetch(`${BASE}/api/unsubscribe`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          template,
-          template_name: template,
-        }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        throw new Error(data.error || `Request failed (${res.status})`);
-      }
-
-      showSuccess();
-    } catch (e) {
-      console.error(e);
-      document.getElementById('error-message').textContent =
-        e.message || 'We couldn\'t complete your unsubscribe request. Please try again.';
-      showState('error');
-    }
-  }
-
-  init();</script>
+  // Make already saved email + template before redirecting here.
+  // This page only shows the branded confirmation — no API call.
+  showState('success');
+  playSuccessAnimation();
+</script>
 </body>
 </html>
