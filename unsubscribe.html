@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Unsubscribe — Solve Energy</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --orange: #F97316;
+      --bg: #0A0A0A;
+      --surface: #141414;
+      --border: #222;
+      --text: #F5F5F5;
+      --muted: #888;
+      --success: #22C55E;
+      --error: #EF4444;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 48px 40px;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 36px;
+      background: transparent;
+    }
+
+    .logo-img {
+      display: block;
+      width: 100%;
+      max-width: 220px;
+      height: auto;
+      background: transparent;
+    }
+
+    .status-visual {
+      margin: 0 auto 28px;
+      width: 72px;
+      height: 72px;
+      position: relative;
+    }
+
+    .status-loader,
+    .status-complete {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    .spinner {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: 3px solid var(--border);
+      border-top-color: var(--orange);
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .complete-icon {
+      width: 72px;
+      height: 72px;
+      transform: scale(0.85);
+      opacity: 0;
+    }
+
+    .complete-svg {
+      width: 72px;
+      height: 72px;
+    }
+
+    .complete-circle {
+      fill: rgba(34, 197, 94, 0.1);
+      stroke: var(--success);
+      stroke-width: 2;
+      stroke-dasharray: 151;
+      stroke-dashoffset: 151;
+    }
+
+    .complete-check-path {
+      fill: none;
+      stroke: var(--success);
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 48;
+      stroke-dashoffset: 48;
+    }
+
+    .status-complete {
+      opacity: 0;
+      transform: scale(0.92);
+      pointer-events: none;
+    }
+
+    .is-ready .status-loader {
+      opacity: 0;
+      transform: scale(0.92);
+      pointer-events: none;
+    }
+
+    .is-ready .status-loader .spinner {
+      animation-play-state: paused;
+    }
+
+    .is-ready .status-complete {
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: auto;
+    }
+
+    .is-ready .complete-icon {
+      animation: completePop 0.45s ease forwards;
+    }
+
+    .is-ready .complete-circle {
+      animation: drawCircle 0.55s ease forwards;
+    }
+
+    .is-ready .complete-check-path {
+      animation: drawCheck 0.4s 0.45s ease forwards;
+    }
+
+    @keyframes completePop {
+      from { transform: scale(0.85); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes drawCircle {
+      to { stroke-dashoffset: 0; }
+    }
+
+    @keyframes drawCheck {
+      to { stroke-dashoffset: 0; }
+    }
+
+    .error-icon {
+      width: 72px;
+      height: 72px;
+      background: rgba(239,68,68,0.1);
+      border: 2px solid var(--error);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      margin: 0 auto 28px;
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+
+    .detail {
+      font-size: 13px;
+      color: var(--orange);
+      font-weight: 500;
+      margin-bottom: 16px;
+      min-height: 18px;
+      word-break: break-word;
+    }
+
+    p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity 0.2s;
+      justify-content: center;
+    }
+
+    .btn:hover { opacity: 0.88; }
+
+    #state-main, #state-success, #state-error { display: none; }
+    #state-main.active, #state-success.active, #state-error.active { display: block; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="logo">
+    <img src="assets/solve-logo.png" alt="Solve" class="logo-img" />
+  </div>
+
+  <!-- PROCESSING -->
+  <div id="state-main">
+    <div class="status-visual">
+      <div class="status-loader">
+        <div class="spinner"></div>
+      </div>
+    </div>
+    <h1>Processing your request</h1>
+    <p>Please wait a moment while we update your preferences.</p>
+  </div>
+
+  <!-- SUCCESS -->
+  <div id="state-success">
+    <div class="status-visual is-ready" style="position:relative;">
+      <div class="status-complete" style="opacity:1; transform:scale(1); pointer-events:auto;">
+        <div class="complete-icon" style="opacity:1; transform:scale(1);">
+          <svg class="complete-svg" viewBox="0 0 52 52" aria-hidden="true">
+            <circle class="complete-circle" cx="26" cy="26" r="24" style="stroke-dashoffset:0;" />
+            <path class="complete-check-path" fill="none" d="M14 27 l8 8 l16-16" style="stroke-dashoffset:0;" />
+          </svg>
+        </div>
+      </div>
+    </div>
+    <h1>Unsubscribed successfully</h1>
+    <div class="detail" id="success-detail"></div>
+    <p>You have been unsubscribed and will no longer receive this email. If this was a mistake, contact us at <a href="mailto:projects@solveenergy.ca" style="color:var(--orange);">projects@solveenergy.ca</a>.</p>
+  </div>
+
+  <!-- ERROR -->
+  <div id="state-error">
+    <div class="error-icon">⚠️</div>
+    <h1>Something went wrong</h1>
+    <p id="error-message">We couldn't complete your unsubscribe request. Please try again or contact your admin.</p>
+    <button class="btn" onclick="window.location.reload()">Try again</button>
+  </div>
+</div>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const BASE = window.location.origin;
+
+  function decodeParam(value) {
+    if (!value) return '';
+    try {
+      return decodeURIComponent(value).trim();
+    } catch {
+      return String(value).trim();
+    }
+  }
+
+  function showState(name) {
+    ['state-main', 'state-success', 'state-error'].forEach((id) => {
+      document.getElementById(id).classList.toggle('active', id === `state-${name}`);
+    });
+  }
+
+  function playSuccessAnimation() {
+    const main = document.getElementById('state-success');
+    const circle = main.querySelector('.complete-circle');
+    const check = main.querySelector('.complete-check-path');
+    const icon = main.querySelector('.complete-icon');
+
+    circle.style.strokeDashoffset = '151';
+    check.style.strokeDashoffset = '48';
+    icon.style.opacity = '0';
+    icon.style.transform = 'scale(0.85)';
+
+    requestAnimationFrame(() => {
+      main.classList.add('is-ready');
+      icon.style.animation = 'completePop 0.45s ease forwards';
+      circle.style.animation = 'drawCircle 0.55s ease forwards';
+      check.style.animation = 'drawCheck 0.4s 0.45s ease forwards';
+    });
+  }
+
+  function showSuccess(email, template) {
+    const detailParts = [];
+    if (email) detailParts.push(email);
+    if (template) detailParts.push(template);
+    document.getElementById('success-detail').textContent = detailParts.join(' · ');
+    showState('success');
+    playSuccessAnimation();
+  }
+
+  async function init() {
+    const email = decodeParam(params.get('email') || params.get('contact_email'));
+    const template = decodeParam(
+      params.get('template') ||
+      params.get('template_name') ||
+      params.get('email_template')
+    );
+    const status = decodeParam(params.get('status')).toLowerCase();
+
+    // Make redirected here after recording the unsubscribe — just show success
+    if (status === 'success' || status === 'done' || status === 'ok') {
+      showSuccess(email, template);
+      return;
+    }
+
+    if (!email) {
+      document.getElementById('error-message').textContent =
+        'Missing email in the unsubscribe link. Please use the link from your email.';
+      showState('error');
+      return;
+    }
+
+    // Fallback: page calls Make itself (if link points directly to this page)
+    showState('main');
+
+    try {
+      const res = await fetch(`${BASE}/api/unsubscribe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          template,
+          template_name: template,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data.error || `Request failed (${res.status})`);
+      }
+
+      showSuccess(email, template);
+    } catch (e) {
+      console.error(e);
+      document.getElementById('error-message').textContent =
+        e.message || 'We couldn\'t complete your unsubscribe request. Please try again.';
+      showState('error');
+    }
+  }
+
+  init();</script>
+</body>
+</html>
