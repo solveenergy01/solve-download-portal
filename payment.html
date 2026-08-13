@@ -191,6 +191,38 @@
       min-height: 40px;
     }
 
+    .stripe-placeholder {
+      text-align: left;
+      background: #0A0A0A;
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      padding: 20px 16px;
+      margin: 4px 0 20px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .stripe-placeholder strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .info-banner {
+      display: none;
+      background: var(--orange-soft);
+      border: 1px solid rgba(249, 115, 22, 0.35);
+      color: #fdba74;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 16px;
+      text-align: left;
+    }
+
+    .info-banner.visible { display: block; }
+
     .btn {
       display: inline-flex;
       align-items: center;
@@ -391,6 +423,7 @@
       </div>
 
       <div class="error-banner" id="pay-error"></div>
+      <div class="info-banner" id="pay-info"></div>
 
       <div class="section-title">Your details</div>
       <div class="field">
@@ -404,6 +437,10 @@
 
       <div class="section-title">Payment method</div>
       <div id="payment-element"></div>
+      <div class="stripe-placeholder" id="stripe-placeholder" style="display:none;">
+        <strong>Stripe widget will appear here</strong><br />
+        Add your Stripe test keys in Vercel to enable live card payments.
+      </div>
 
       <button class="btn" id="submit-btn" type="button">
         <span id="submit-text">Pay now</span>
@@ -455,8 +492,10 @@
 
   let stripe;
   let elements;
-  let amountCents = 0;
+  let amountCents = 103100;
   let activeCurrency = 'cad';
+  let checkoutReady = false;
+  const DEFAULT_PRODUCT = 'Solve Energy Project Deposit (New)';
 
   function showState(name) {
     ['state-loading', 'state-pay', 'state-success', 'state-error'].forEach((id) => {
@@ -496,6 +535,26 @@
     el.classList.remove('visible');
   }
 
+  function applyOrderSummary(cents, currency, productName) {
+    amountCents = cents;
+    activeCurrency = currency || 'cad';
+    const money = formatMoney(amountCents, activeCurrency);
+    document.getElementById('amount-display').textContent = money;
+    document.getElementById('product-display').textContent = productName || DEFAULT_PRODUCT;
+    document.getElementById('submit-text').textContent = `Pay ${money}`;
+  }
+
+  function showBrandedPreview(message) {
+    applyOrderSummary(103100, 'cad', DEFAULT_PRODUCT);
+    document.getElementById('payment-element').style.display = 'none';
+    document.getElementById('stripe-placeholder').style.display = 'block';
+    const info = document.getElementById('pay-info');
+    info.textContent = message || 'Stripe keys are not configured yet. The branded page is live — add keys in Vercel to enable payments.';
+    info.classList.add('visible');
+    document.getElementById('submit-btn').disabled = true;
+    showState('pay');
+  }
+
   async function init() {
     const redirectStatus = params.get('redirect_status');
     if (params.get('payment_intent') && redirectStatus === 'succeeded') {
@@ -520,16 +579,16 @@
     try {
       const configRes = await fetch(`${BASE}/api/payment-config`);
       const config = await configRes.json();
-      if (!configRes.ok) throw new Error(config.error || 'Failed to load payment config');
+      if (!configRes.ok) {
+        showBrandedPreview(config.error || 'Stripe publishable key is not configured');
+        return;
+      }
 
-      amountCents = config.amountCents;
-      activeCurrency = config.currency || 'cad';
-      const money = formatMoney(config.amountCents, activeCurrency);
-
-      document.getElementById('amount-display').textContent = money;
-      document.getElementById('product-display').textContent =
-        config.productName || 'Solve Energy Project Deposit (New)';
-      document.getElementById('submit-text').textContent = `Pay ${money}`;
+      applyOrderSummary(
+        config.amountCents,
+        config.currency,
+        config.productName || DEFAULT_PRODUCT
+      );
 
       const intentRes = await fetch(`${BASE}/api/create-payment-intent`, {
         method: 'POST',
@@ -542,7 +601,10 @@
         }),
       });
       const intent = await intentRes.json();
-      if (!intentRes.ok) throw new Error(intent.error || 'Failed to create payment');
+      if (!intentRes.ok) {
+        showBrandedPreview(intent.error || 'Stripe secret key is not configured');
+        return;
+      }
 
       stripe = Stripe(config.publishableKey);
       elements = stripe.elements({
@@ -560,17 +622,25 @@
         },
       });
 
+      document.getElementById('stripe-placeholder').style.display = 'none';
+      document.getElementById('payment-element').style.display = 'block';
       elements.create('payment').mount('#payment-element');
+      checkoutReady = true;
+      document.getElementById('submit-btn').disabled = false;
       showState('pay');
     } catch (e) {
       console.error(e);
-      document.getElementById('error-message').textContent = e.message || 'We couldn\'t start checkout.';
-      showState('error');
+      showBrandedPreview(e.message || 'Unable to start Stripe checkout yet.');
     }
   }
 
   document.getElementById('submit-btn').addEventListener('click', async () => {
     clearPayError();
+    if (!checkoutReady || !stripe || !elements) {
+      showPayError('Stripe is not ready yet. Add your keys in Vercel, then refresh this page.');
+      return;
+    }
+
     const email = document.getElementById('customer-email').value.trim();
     if (!email || !email.includes('@')) {
       showPayError('Please enter a valid email address.');
