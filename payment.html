@@ -16,132 +16,142 @@
       --sky: #B9DAE7;
       --green: #25B34B;
       --green-dark: #1e943c;
-      --yellow: #FBE017;
       --white: #FFFFFF;
       --muted: #5A6455;
+      --footer-muted: #B9C0B2;
       --border: #D5D9CF;
       --error: #C0392B;
-      --success: #25B34B;
     }
-
-    html { scroll-behavior: smooth; }
 
     body {
       font-family: 'Inter', Arial, Helvetica, sans-serif;
       background: var(--concrete);
       color: var(--core);
       min-height: 100vh;
-      line-height: 1.5;
+      line-height: 1.6;
       -webkit-font-smoothing: antialiased;
     }
 
-    .page {
+    .shell {
       width: 100%;
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 40px 20px 64px;
-    }
-
-    /* Header */
-    .header {
-      text-align: center;
-      margin-bottom: 28px;
-    }
-
-    .logo {
-      display: inline-flex;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-
-    .logo-img {
-      display: block;
-      width: 180px;
-      max-width: 55vw;
-      height: auto;
-      /* Core-coloured mark on Concrete background */
-      filter: brightness(0) saturate(100%);
-      opacity: 0.92;
-    }
-
-    .intro {
-      font-weight: 300;
-      font-size: 15px;
-      color: var(--muted);
-      max-width: 520px;
-      margin: 0 auto;
-      line-height: 1.7;
-    }
-
-    /* Payment card */
-    .card {
+      max-width: 640px;
+      margin: 32px auto;
       background: var(--white);
-      border-radius: 16px;
-      box-shadow: 0 8px 30px rgba(28, 36, 24, 0.08);
-      border: 1px solid rgba(28, 36, 24, 0.06);
-      padding: 36px 32px;
-      margin-bottom: 48px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(28, 36, 24, 0.1);
+    }
+
+    @media (max-width: 680px) {
+      .shell {
+        margin: 0;
+        border-radius: 0;
+        min-height: 100vh;
+        box-shadow: none;
+      }
+    }
+
+    /* Email-matching header */
+    .brand-header {
+      background: var(--core);
+      padding: 28px 40px;
+      border-bottom: 4px solid var(--green);
+    }
+
+    .brand-header img {
+      display: block;
+      width: 160px;
+      max-width: 50%;
+      height: auto;
+    }
+
+    .content {
+      padding: 36px 40px 40px;
     }
 
     @media (max-width: 560px) {
-      .page { padding: 28px 14px 48px; }
-      .card { padding: 28px 18px; border-radius: 14px; }
+      .brand-header { padding: 24px 20px; }
+      .content { padding: 28px 18px 32px; }
+      .brand-header img { max-width: 42%; }
     }
 
     .eyebrow {
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: 0.15em;
+      margin: 0 0 10px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 2px;
       text-transform: uppercase;
-      color: var(--green);
-      margin-bottom: 8px;
-    }
-
-    .card h1 {
-      font-size: 26px;
-      font-weight: 400;
-      letter-spacing: -0.02em;
       color: var(--core);
-      margin-bottom: 6px;
     }
 
-    .card-sub {
-      font-weight: 300;
+    h1 {
+      margin: 0 0 16px;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.3;
+      color: var(--core);
+    }
+
+    .lead {
+      margin: 0 0 20px;
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--core);
+      line-height: 1.7;
+    }
+
+    /* Email-style callout */
+    .callout {
+      background: var(--concrete);
+      border-left: 4px solid var(--green);
+      border-radius: 0 8px 8px 0;
+      padding: 20px 24px;
+      margin: 0 0 28px;
+    }
+
+    .callout-title {
+      margin: 0 0 8px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--core);
+    }
+
+    .callout p {
+      margin: 0;
       font-size: 14px;
-      color: var(--muted);
-      margin-bottom: 28px;
+      line-height: 1.7;
+      color: var(--core);
     }
 
     .section-label {
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: 0.15em;
+      margin: 0 0 12px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 2px;
       text-transform: uppercase;
       color: var(--core);
-      margin: 0 0 12px;
     }
 
-    .field {
-      margin-bottom: 12px;
-    }
+    .field { margin-bottom: 12px; }
 
     .field label {
       display: block;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 500;
-      color: var(--muted);
+      color: var(--core);
       margin-bottom: 6px;
     }
 
     .field input {
       width: 100%;
-      background: var(--concrete);
+      background: var(--white);
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 8px;
       padding: 13px 14px;
       font-size: 15px;
       font-family: inherit;
-      font-weight: 400;
       color: var(--core);
       outline: none;
       transition: border-color 0.15s, box-shadow 0.15s;
@@ -150,7 +160,6 @@
     .field input:focus {
       border-color: var(--green);
       box-shadow: 0 0 0 3px rgba(37, 179, 75, 0.15);
-      background: var(--white);
     }
 
     .field input::placeholder { color: #9AA193; }
@@ -163,22 +172,22 @@
 
     @media (max-width: 560px) {
       .fields-grid { grid-template-columns: 1fr; }
+      h1 { font-size: 24px; }
     }
 
-    /* Order summary */
     .summary {
       background: var(--concrete);
-      border-radius: 12px;
-      padding: 16px 18px;
+      border-left: 4px solid var(--green);
+      border-radius: 0 8px 8px 0;
+      padding: 18px 20px;
       margin: 22px 0 24px;
     }
 
     .summary-row {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
       gap: 12px;
-      font-size: 14px;
     }
 
     .summary-row + .summary-row {
@@ -188,27 +197,29 @@
     }
 
     .summary-item {
-      font-weight: 500;
+      font-size: 15px;
+      font-weight: 600;
       color: var(--core);
     }
 
     .summary-meta {
-      font-size: 12px;
-      font-weight: 300;
+      font-size: 13px;
       color: var(--muted);
       margin-top: 2px;
     }
 
     .summary-price {
-      font-weight: 600;
-      color: var(--green);
       font-size: 16px;
+      font-weight: 700;
+      color: var(--green);
       white-space: nowrap;
     }
 
     .summary-total-label {
-      font-weight: 600;
-      letter-spacing: 0.02em;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
 
     .summary-total-price {
@@ -217,33 +228,26 @@
       color: var(--core);
     }
 
-    #payment-element {
-      margin: 4px 0 8px;
-      min-height: 40px;
-    }
+    #payment-element { margin: 4px 0 8px; min-height: 40px; }
 
     .stripe-placeholder {
       display: none;
       background: var(--concrete);
       border: 1px dashed var(--border);
-      border-radius: 10px;
+      border-radius: 8px;
       padding: 18px 16px;
       margin: 4px 0 16px;
       color: var(--muted);
       font-size: 13px;
-      font-weight: 300;
       line-height: 1.55;
     }
 
-    .stripe-placeholder strong {
-      color: var(--core);
-      font-weight: 600;
-    }
+    .stripe-placeholder strong { color: var(--core); }
 
     .error-banner,
     .info-banner {
       display: none;
-      border-radius: 10px;
+      border-radius: 8px;
       padding: 12px 14px;
       font-size: 13px;
       line-height: 1.5;
@@ -257,8 +261,8 @@
     }
 
     .info-banner {
-      background: rgba(185, 218, 231, 0.45);
-      border: 1px solid rgba(185, 218, 231, 0.9);
+      background: rgba(185, 218, 231, 0.5);
+      border: 1px solid var(--sky);
       color: var(--core);
     }
 
@@ -274,24 +278,26 @@
       background: var(--green);
       color: var(--white);
       border: none;
-      border-radius: 10px;
+      border-radius: 8px;
       padding: 16px 24px;
       font-size: 16px;
-      font-weight: 600;
+      font-weight: 700;
       font-family: inherit;
       cursor: pointer;
-      transition: background 0.15s, transform 0.1s;
-      margin-top: 8px;
+      transition: background 0.15s;
+      margin-top: 10px;
     }
 
     .btn:hover { background: var(--green-dark); }
-    .btn:active { transform: scale(0.99); }
-    .btn:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--core);
+      border: 1px solid var(--border);
     }
 
-    .btn svg { flex-shrink: 0; }
+    .btn-secondary:hover { background: var(--concrete); }
 
     .trust {
       display: flex;
@@ -300,17 +306,14 @@
       gap: 8px;
       margin-top: 16px;
       font-size: 12px;
-      font-weight: 400;
       color: var(--muted);
     }
 
     .trust svg { color: var(--green); }
 
-    /* States overlay inside card */
     .state { display: none; }
     .state.active { display: block; }
-
-    .state-center { text-align: center; padding: 24px 8px; }
+    .state-center { text-align: center; padding: 28px 8px; }
 
     .spinner {
       width: 56px;
@@ -323,12 +326,6 @@
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    .status-icon {
-      width: 72px;
-      height: 72px;
-      margin: 0 auto 20px;
-    }
 
     .complete-circle {
       fill: rgba(37, 179, 75, 0.12);
@@ -350,7 +347,6 @@
 
     .is-ready .complete-circle { animation: drawCircle 0.55s ease forwards; }
     .is-ready .complete-check { animation: drawCheck 0.4s 0.45s ease forwards; }
-
     @keyframes drawCircle { to { stroke-dashoffset: 0; } }
     @keyframes drawCheck { to { stroke-dashoffset: 0; } }
 
@@ -368,263 +364,257 @@
     }
 
     .state-center h2 {
-      font-size: 22px;
-      font-weight: 500;
-      margin-bottom: 8px;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 10px;
     }
 
     .state-center p {
-      font-weight: 300;
-      font-size: 14px;
-      color: var(--muted);
-      max-width: 400px;
-      margin: 0 auto 16px;
-      line-height: 1.65;
+      font-size: 15px;
+      color: var(--core);
+      max-width: 420px;
+      margin: 0 auto 14px;
+      line-height: 1.7;
     }
 
     .paid-amount {
-      font-weight: 600;
+      font-weight: 700;
       color: var(--green);
       font-size: 16px;
     }
 
-    .btn-secondary {
-      background: transparent;
-      color: var(--core);
-      border: 1px solid var(--border);
-      margin-top: 8px;
-    }
-
-    .btn-secondary:hover {
-      background: var(--concrete);
-    }
-
     /* Gallery */
     .gallery {
-      margin-bottom: 40px;
+      max-width: 640px;
+      margin: 0 auto 32px;
+      padding: 0 16px;
     }
 
     .gallery-head {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
+    }
+
+    .gallery-head .eyebrow {
+      color: var(--core);
     }
 
     .gallery-head h2 {
-      font-size: 28px;
-      font-weight: 400;
-      letter-spacing: -0.02em;
+      font-size: 24px;
+      font-weight: 700;
       margin-bottom: 8px;
     }
 
     .gallery-head p {
-      font-weight: 300;
       font-size: 14px;
       color: var(--muted);
-      max-width: 440px;
+      max-width: 420px;
       margin: 0 auto;
-      line-height: 1.65;
     }
 
     .gallery-panel {
       background: var(--sky);
-      border-radius: 16px;
-      padding: 20px;
+      border-radius: 12px;
+      padding: 16px;
     }
 
     .gallery-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
+      gap: 12px;
     }
 
     @media (max-width: 640px) {
       .gallery-grid { grid-template-columns: 1fr; }
-      .gallery-head h2 { font-size: 24px; }
     }
 
     .gallery-item img {
       width: 100%;
       aspect-ratio: 4 / 3;
       object-fit: cover;
-      border-radius: 10px;
+      border-radius: 8px;
       display: block;
       background: rgba(28, 36, 24, 0.08);
     }
 
     .gallery-caption {
-      margin-top: 10px;
+      margin-top: 8px;
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--core);
-      line-height: 1.4;
     }
 
     .gallery-caption span {
       display: block;
-      font-weight: 300;
+      font-weight: 400;
       color: var(--muted);
       margin-top: 2px;
     }
 
-    /* Footer */
-    .footer {
+    /* Email-matching footer */
+    .brand-footer {
+      background: var(--core);
+      color: var(--footer-muted);
       text-align: center;
-      padding-top: 8px;
+      padding: 32px 40px;
     }
 
-    .footer-tagline {
+    @media (max-width: 560px) {
+      .brand-footer { padding: 28px 20px; }
+    }
+
+    .brand-footer .contact {
+      margin: 0 0 16px;
       font-size: 15px;
-      font-weight: 500;
-      font-style: italic;
-      color: var(--core);
-      margin-bottom: 16px;
-      line-height: 1.5;
     }
 
-    .footer-contact {
-      font-size: 13px;
-      font-weight: 300;
-      color: var(--muted);
-    }
-
-    .footer-contact a {
-      color: var(--core);
-      text-decoration: none;
-      font-weight: 500;
-    }
-
-    .footer-contact a:hover {
+    .brand-footer .contact a {
       color: var(--green);
+      text-decoration: none;
+      font-weight: 600;
     }
 
-    .yellow-accent {
-      display: inline-block;
-      width: 40px;
-      height: 3px;
-      background: var(--yellow);
-      border-radius: 2px;
-      margin: 0 auto 16px;
+    .brand-footer .areas {
+      margin: 0 0 8px;
+      font-size: 13px;
+    }
+
+    .brand-footer .legal {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.7;
+      color: #7A8272;
     }
   </style>
 </head>
 <body>
 
-<div class="page">
-
-  <header class="header">
-    <div class="logo">
+  <div class="shell">
+    <header class="brand-header">
       <img
-        class="logo-img"
-        src="https://solve-download-portal.vercel.app/assets/solve-logo.png"
+        src="https://assets.cdn.filesafe.space/O6tJHRRcCdXxYyEPLcL5/media/6a552de60bc316e6a6636f0d.png"
         alt="Solve Energy"
       />
-    </div>
-    <p class="intro">
-      This deposit confirms your place in our installation pipeline and allows us to begin
-      the planning process to ensure a smooth, efficient install.
-    </p>
-  </header>
+    </header>
 
-  <main class="card">
+    <div class="content">
 
-    <!-- Loading -->
-    <div id="state-loading" class="state state-center active">
-      <div class="spinner"></div>
-      <h2>Preparing secure checkout</h2>
-      <p>Setting up your Solve Energy deposit…</p>
-    </div>
-
-    <!-- Pay -->
-    <div id="state-pay" class="state">
-      <div class="eyebrow">Secure checkout</div>
-      <h1>Solar Installation Deposit</h1>
-      <p class="card-sub">Provide your information below to complete your project deposit.</p>
-
-      <div class="error-banner" id="pay-error"></div>
-      <div class="info-banner" id="pay-info"></div>
-
-      <div class="section-label">Your details</div>
-      <div class="field">
-        <label for="customer-name">Full name</label>
-        <input id="customer-name" type="text" autocomplete="name" placeholder="First and last name" />
-      </div>
-      <div class="fields-grid">
-        <div class="field">
-          <label for="customer-email">Email address</label>
-          <input id="customer-email" type="email" autocomplete="email" placeholder="you@example.com" required />
-        </div>
-        <div class="field">
-          <label for="customer-phone">Phone number</label>
-          <input id="customer-phone" type="tel" autocomplete="tel" placeholder="(555) 000-0000" />
-        </div>
+      <div id="state-loading" class="state state-center active">
+        <div class="spinner"></div>
+        <h2>Preparing secure checkout</h2>
+        <p>Setting up your Solve Energy deposit…</p>
       </div>
 
-      <div class="summary">
-        <div class="summary-row">
-          <div>
-            <div class="summary-item" id="product-display">Solve Energy Project Deposit (New)</div>
-            <div class="summary-meta">Quantity: 1</div>
+      <div id="state-pay" class="state">
+        <p class="eyebrow">Project deposit</p>
+        <h1>Solar Installation Deposit</h1>
+        <p class="lead">
+          Provide your information below to confirm your place in our installation pipeline.
+        </p>
+
+        <div class="callout">
+          <div class="callout-title">What this deposit does</div>
+          <p>
+            This deposit confirms your place in our installation pipeline and allows us to begin
+            the planning process to ensure a smooth, efficient install.
+          </p>
+        </div>
+
+        <div class="error-banner" id="pay-error"></div>
+        <div class="info-banner" id="pay-info"></div>
+
+        <div class="section-label">Your details</div>
+        <div class="field">
+          <label for="customer-name">Full name</label>
+          <input id="customer-name" type="text" autocomplete="name" placeholder="First and last name" />
+        </div>
+        <div class="fields-grid">
+          <div class="field">
+            <label for="customer-email">Email address</label>
+            <input id="customer-email" type="email" autocomplete="email" placeholder="you@example.com" required />
           </div>
-          <div class="summary-price" id="amount-display">CA$1,031.00</div>
+          <div class="field">
+            <label for="customer-phone">Phone number</label>
+            <input id="customer-phone" type="tel" autocomplete="tel" placeholder="(555) 000-0000" />
+          </div>
         </div>
-        <div class="summary-row">
-          <div class="summary-total-label">Order total</div>
-          <div class="summary-total-price" id="total-display">CA$1,031.00</div>
+
+        <div class="summary">
+          <div class="summary-row">
+            <div>
+              <div class="summary-item" id="product-display">Solve Energy Project Deposit (New)</div>
+              <div class="summary-meta">Quantity: 1</div>
+            </div>
+            <div class="summary-price" id="amount-display">CA$1,031.00</div>
+          </div>
+          <div class="summary-row">
+            <div class="summary-total-label">Order total</div>
+            <div class="summary-total-price" id="total-display">CA$1,031.00</div>
+          </div>
+        </div>
+
+        <div class="section-label">Payment</div>
+        <div id="payment-element"></div>
+        <div class="stripe-placeholder" id="stripe-placeholder">
+          <strong>Stripe card form will appear here</strong><br />
+          Add your Stripe secret key in Vercel to enable live payments.
+        </div>
+
+        <button class="btn" id="submit-btn" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <rect x="3" y="11" width="18" height="11" rx="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+          <span id="submit-text">Complete Deposit</span>
+        </button>
+
+        <div class="trust">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+          <span>100% secure &amp; safe payments · Powered by Stripe</span>
         </div>
       </div>
 
-      <div class="section-label">Payment</div>
-      <div id="payment-element"></div>
-      <div class="stripe-placeholder" id="stripe-placeholder">
-        <strong>Stripe card form will appear here</strong><br />
-        Add your Stripe secret key in Vercel to enable live payments.
+      <div id="state-success" class="state state-center">
+        <div class="is-ready" style="width:72px;height:72px;margin:0 auto 20px;">
+          <svg width="72" height="72" viewBox="0 0 52 52" aria-hidden="true">
+            <circle class="complete-circle" cx="26" cy="26" r="24" />
+            <path class="complete-check" d="M14 27 l8 8 l16-16" />
+          </svg>
+        </div>
+        <p class="eyebrow" style="color:var(--green);">Payment received</p>
+        <h2>Thank you</h2>
+        <p>
+          Your Solve Energy project deposit is confirmed. A receipt will be emailed to you shortly,
+          and our team will follow up to keep your install moving forward.
+        </p>
+        <p class="paid-amount" id="success-amount"></p>
       </div>
 
-      <button class="btn" id="submit-btn" type="button">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <rect x="3" y="11" width="18" height="11" rx="2" />
-          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-        </svg>
-        <span id="submit-text">Complete Deposit</span>
-      </button>
-
-      <div class="trust">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-        </svg>
-        <span>100% secure &amp; safe payments · Powered by Stripe</span>
+      <div id="state-error" class="state state-center">
+        <div class="error-badge">⚠️</div>
+        <h2>Something went wrong</h2>
+        <p id="error-message">We couldn't start checkout. Please try again or contact us.</p>
+        <button class="btn btn-secondary" type="button" onclick="window.location.reload()">Try again</button>
       </div>
+
     </div>
 
-    <!-- Success -->
-    <div id="state-success" class="state state-center">
-      <div class="status-icon is-ready" id="success-visual">
-        <svg width="72" height="72" viewBox="0 0 52 52" aria-hidden="true">
-          <circle class="complete-circle" cx="26" cy="26" r="24" />
-          <path class="complete-check" d="M14 27 l8 8 l16-16" />
-        </svg>
-      </div>
-      <div class="eyebrow">Payment received</div>
-      <h2>Thank you</h2>
-      <p>
-        Your Solve Energy project deposit is confirmed. A receipt will be emailed to you shortly,
-        and our team will follow up to keep your install moving forward.
+    <footer class="brand-footer">
+      <p class="contact">
+        <a href="tel:+18886676583">+1 888-667-6583</a>
+        <span style="color:#5A6455;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+        <a href="mailto:projects@solveenergy.ca">projects@solveenergy.ca</a>
       </p>
-      <p class="paid-amount" id="success-amount"></p>
-    </div>
-
-    <!-- Error -->
-    <div id="state-error" class="state state-center">
-      <div class="error-badge">⚠️</div>
-      <h2>Something went wrong</h2>
-      <p id="error-message">We couldn't start checkout. Please try again or contact us.</p>
-      <button class="btn btn-secondary" type="button" onclick="window.location.reload()">Try again</button>
-    </div>
-  </main>
+      <p class="areas">Metro Vancouver · Vancouver Island · Alberta · Okanagan</p>
+      <p class="legal">© 2026 Solve Energy. All rights reserved.</p>
+    </footer>
+  </div>
 
   <section class="gallery" aria-label="Solar installs">
     <div class="gallery-head">
-      <div class="yellow-accent"></div>
+      <p class="eyebrow">Our work</p>
       <h2>See Our Solar Installs</h2>
       <p>Join the movement in building a cleaner, brighter tomorrow powered by green energy.</p>
     </div>
@@ -632,41 +622,19 @@
       <div class="gallery-grid">
         <article class="gallery-item">
           <img src="assets/hero-premium-house.jpg" alt="Residential solar installation" />
-          <div class="gallery-caption">
-            Premium residential install
-            <span>Clean power for your home</span>
-          </div>
+          <div class="gallery-caption">Premium residential install<span>Clean power for your home</span></div>
         </article>
         <article class="gallery-item">
           <img src="assets/hero-house.png" alt="Home with solar system" />
-          <div class="gallery-caption">
-            Whole-home solar
-            <span>Engineered for efficiency</span>
-          </div>
+          <div class="gallery-caption">Whole-home solar<span>Engineered for efficiency</span></div>
         </article>
         <article class="gallery-item">
           <img src="assets/hero-roof.jpg" alt="Roof solar array" />
-          <div class="gallery-caption">
-            Precision roof arrays
-            <span>Built for Canadian homes</span>
-          </div>
+          <div class="gallery-caption">Precision roof arrays<span>Built for Canadian homes</span></div>
         </article>
       </div>
     </div>
   </section>
-
-  <footer class="footer">
-    <p class="footer-tagline">
-      Take the first step towards energy independence. Start saving with Solve.
-    </p>
-    <p class="footer-contact">
-      <a href="mailto:projects@solveenergy.ca">projects@solveenergy.ca</a>
-      &nbsp;·&nbsp;
-      <a href="tel:+18886676583">+1 888-667-6583</a>
-    </p>
-  </footer>
-
-</div>
 
 <script>
   const params = new URLSearchParams(window.location.search);
@@ -798,22 +766,15 @@
             colorText: '#1C2418',
             colorDanger: '#C0392B',
             fontFamily: 'Inter, system-ui, sans-serif',
-            borderRadius: '10px',
-            spacingUnit: '4px',
+            borderRadius: '8px',
           },
           rules: {
-            '.Input': {
-              backgroundColor: '#E8ECE1',
-              borderColor: '#D5D9CF',
-            },
+            '.Input': { backgroundColor: '#FFFFFF', borderColor: '#D5D9CF' },
             '.Input:focus': {
               borderColor: '#25B34B',
               boxShadow: '0 0 0 3px rgba(37, 179, 75, 0.15)',
             },
-            '.Label': {
-              color: '#5A6455',
-              fontWeight: '500',
-            },
+            '.Label': { color: '#1C2418', fontWeight: '500' },
           },
         },
       });
